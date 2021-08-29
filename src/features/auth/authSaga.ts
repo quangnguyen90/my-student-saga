@@ -1,4 +1,5 @@
 import { PayloadAction } from "@reduxjs/toolkit";
+import { push } from "connected-react-router";
 import { call, delay, fork, put, take } from "redux-saga/effects";
 import { authActions, LoginPayload } from "./authSlice";
 
@@ -12,16 +13,18 @@ function* handleLogin(payload: LoginPayload) {
                 name: 'npquang',
             })
         );
+        // redirect to admin page
+        yield put(push('/admin'));
     } catch (error) {
         yield put(authActions.loginFail(error.message));
     }
-    // redirect to admin page
 }
 
 function* handleLogout() {
     yield delay(500);
     localStorage.removeItem('access_token');
     // redirect to login page
+    yield put(push('/login'));
 }
 
 function* watchLoginFlow() {
@@ -29,7 +32,7 @@ function* watchLoginFlow() {
         const isLoggedIn = Boolean(localStorage.getItem('access_token'));
         if (!isLoggedIn) {
             const action: PayloadAction<LoginPayload> = yield take(authActions.login.type);
-            yield call(handleLogin, action.payload);
+            yield fork(handleLogin, action.payload);
         }
 
         yield take(authActions.logout.type);
